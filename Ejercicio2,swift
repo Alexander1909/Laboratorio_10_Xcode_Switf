@@ -1,0 +1,101 @@
+import SwiftUI
+import Foundation
+
+// ViewModel: contiene la lógica de negocio
+class CalculadoraViewModel: ObservableObject {
+    @Published var numero1: String = ""
+    @Published var numero2: String = ""
+    @Published var operacion: String = "Suma"
+    @Published var resultado: String = ""
+
+    let operaciones = ["Suma", "Resta", "Multiplicación",
+                       "División", "Potencia", "Raíz cuadrada"]
+
+    func calcular() {
+        guard let a = Double(numero1) else {
+            resultado = "Error: primer número inválido"
+            return
+        }
+
+        switch operacion {
+        case "Suma":
+            guard let b = Double(numero2) else { resultado = "Error"; return }
+            resultado = "Resultado: \(a + b)"
+        case "Resta":
+            guard let b = Double(numero2) else { resultado = "Error"; return }
+            resultado = "Resultado: \(a - b)"
+        case "Multiplicación":
+            guard let b = Double(numero2) else { resultado = "Error"; return }
+            resultado = "Resultado: \(a * b)"
+        case "División":
+            guard let b = Double(numero2), b != 0 else {
+                resultado = "Error: divisor inválido o cero"
+                return
+            }
+            resultado = "Resultado: \(a / b)"
+        case "Potencia":
+            guard let b = Double(numero2) else { resultado = "Error"; return }
+            resultado = "Resultado: \(pow(a, b))"
+        case "Raíz cuadrada":
+            if a < 0 {
+                resultado = "Error: número negativo"
+            } else {
+                resultado = "Resultado: \(sqrt(a))"
+            }
+        default:
+            resultado = "Operación desconocida"
+        }
+    }
+}
+
+// Vista principal
+struct CalculadoraView: View {
+    @StateObject private var vm = CalculadoraViewModel()
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Operación")) {
+                    Picker("Operación", selection: $vm.operacion) {
+                        ForEach(vm.operaciones, id: \.self) { Text($0) }
+                    }
+                    .pickerStyle(.menu)
+                }
+
+                Section(header: Text("Valores")) {
+                    TextField("Número 1", text: $vm.numero1)
+                        .keyboardType(.decimalPad)
+                    if vm.operacion != "Raíz cuadrada" {
+                        TextField("Número 2", text: $vm.numero2)
+                            .keyboardType(.decimalPad)
+                    }
+                }
+
+                Section {
+                    Button("Calcular") { vm.calcular() }
+                        .frame(maxWidth: .infinity)
+                        .foregroundColor(.white)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                }
+
+                if !vm.resultado.isEmpty {
+                    Section(header: Text("Resultado")) {
+                        Text(vm.resultado)
+                            .font(.headline)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .navigationTitle("Calculadora Swift")
+        }
+    }
+}
+
+@main
+struct CalculadoraApp: App {
+    var body: some Scene {
+        WindowGroup { CalculadoraView() }
+    }
+}
